@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ-Урок — Найди свою нишу</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #1a0533 0%, #2d1b69 50%, #1a0533 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: white;
+  }
+  .card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 560px;
+    width: 100%;
+    backdrop-filter: blur(10px);
+  }
+  h1 { font-size: 26px; margin-bottom: 8px; }
+  .subtitle { color: rgba(255,255,255,0.6); margin-bottom: 30px; font-size: 15px; }
+  label { display: block; margin-bottom: 6px; font-size: 14px; color: rgba(255,255,255,0.8); }
+  input, textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.08);
+    color: white;
+    font-size: 15px;
+    margin-bottom: 18px;
+    outline: none;
+    transition: border 0.2s;
+  }
+  input:focus, textarea:focus { border-color: rgba(167,139,250,0.7); }
+  textarea { min-height: 120px; resize: vertical; }
+  button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(90deg, #7c3aed, #a855f7);
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error { color: #f87171; font-size: 14px; margin-bottom: 14px; display: none; }
+  .result {
+    margin-top: 24px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px;
+    display: none;
+    white-space: pre-wrap;
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  #login-section {}
+  #main-section { display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- Экран входа -->
+  <div id="login-section">
+    <h1>🤖 ИИ-Урок</h1>
+    <p class="subtitle">Введи своё имя и код доступа из письма</p>
+    <label>Как тебя зовут?</label>
+    <input type="text" id="name-input" placeholder="Например: Маша">
+    <label>Код доступа</label>
+    <input type="password" id="password-input" placeholder="Введи код из письма">
+    <p class="error" id="login-error">❌ Неверный код доступа</p>
+    <button onclick="checkLogin()">🚀 Начать работу с ИИ</button>
+  </div>
+
+  <!-- Основной экран -->
+  <div id="main-section">
+    <h1>🎯 Найди свою нишу</h1>
+    <p class="subtitle" id="greeting"></p>
+    <label>Расскажи о себе — чем занимаешься, что умеешь, что интересует?</label>
+    <textarea id="about-input" placeholder="Например: я бухгалтер с 10-летним стажем, люблю готовить, есть кот, хочу заработать онлайн..."></textarea>
+    <p class="error" id="main-error"></p>
+    <button id="ask-btn" onclick="askAI()">✨ Найти мои ниши с ИИ</button>
+    <div class="result" id="result-box"></div>
+  </div>
+
+</div>
+
+<script>
+const CORRECT_PASSWORD = "kira2026";
+
+function checkLogin() {
+  const name = document.getElementById("name-input").value.trim();
+  const pass = document.getElementById("password-input").value.trim();
+  const err = document.getElementById("login-error");
+
+  if (!name) { err.textContent = "❌ Введи своё имя"; err.style.display = "block"; return; }
+  if (pass !== CORRECT_PASSWORD) { err.textContent = "❌ Неверный код доступа"; err.style.display = "block"; return; }
+
+  err.style.display = "none";
+  document.getElementById("login-section").style.display = "none";
+  document.getElementById("main-section").style.display = "block";
+  document.getElementById("greeting").textContent = "Привет, " + name + "! Расскажи о себе 👇";
+}
+
+async function askAI() {
+  const about = document.getElementById("about-input").value.trim();
+  const btn = document.getElementById("ask-btn");
+  const errEl = document.getElementById("main-error");
+  const resultBox = document.getElementById("result-box");
+
+  if (!about) { errEl.textContent = "❌ Расскажи немного о себе"; errEl.style.display = "block"; return; }
+
+  errEl.style.display = "none";
+  btn.disabled = true;
+  btn.textContent = "⏳ ИИ думает...";
+  resultBox.style.display = "none";
+  resultBox.textContent = "";
+
+  try {
+    const response = await fetch("/.netlify/functions/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ about: about })
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error("Ошибка сервера: " + response.status + " — " + text);
+    }
+
+    const data = await response.json();
+    resultBox.textContent = data.result;
+    resultBox.style.display = "block";
+
+  } catch (e) {
+    errEl.textContent = "❌ " + e.message;
+    errEl.style.display = "block";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "✨ Найти мои ниши с ИИ";
+  }
+}
+</script>
+</body>
+</html>
