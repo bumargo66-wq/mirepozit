@@ -1,0 +1,9 @@
+{
+  "name": "ai-proxy",
+  "version": "1.0.0",
+  "description": "Безопасный прокси к OpenAI для интерактивных уроков",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}

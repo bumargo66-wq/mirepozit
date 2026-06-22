@@ -1,0 +1,18 @@
+# Конфигурация Netlify
+# ВНИМАНИЕ: секретные переменные (OPENAI_API_KEY и др.) задаются НЕ здесь,
+# а в панели Netlify: Site configuration > Environment variables.
+# Файл netlify.toml не передаёт переменные внутрь функций.
+
+[build]
+  # Папка с готовым сайтом (HTML-урок, лендинг). Поменяйте при необходимости.
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Короткий адрес для функции: /api/ask  вместо  /.netlify/functions/ask-ai
+[[redirects]]
+  from = "/api/ask"
+  to = "/.netlify/functions/ask-ai"
+  status = 200
