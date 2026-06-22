@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИИ-наставник | Онлайн-урок</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f0f1a;
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: #1a1a2e;
+    border: 1px solid #7c3aed44;
+    border-radius: 20px;
+    padding: 40px 36px;
+    max-width: 560px;
+    width: 100%;
+    box-shadow: 0 0 40px #7c3aed22;
+  }
+  .icon { text-align: center; font-size: 48px; margin-bottom: 16px; }
+  h1 { text-align: center; font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .subtitle { text-align: center; color: #a78bfa; font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+  label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #a78bfa; margin-bottom: 6px; margin-top: 18px; }
+  input, textarea {
+    width: 100%;
+    background: #0f0f1a;
+    border: 1px solid #7c3aed55;
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    transition: border 0.2s;
+  }
+  input:focus, textarea:focus { border-color: #7c3aed; }
+  textarea { resize: vertical; min-height: 80px; }
+  .btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 15px;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.9; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .hint { text-align: center; font-size: 12px; color: #6b6b8a; margin-top: 12px; }
+  .error { background: #ff000022; border: 1px solid #ff4444; border-radius: 10px; padding: 12px; color: #ff8888; font-size: 14px; margin-top: 16px; display: none; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .step-header { font-size: 13px; color: #a78bfa; font-weight: 700; margin-bottom: 4px; }
+  .answer-box {
+    background: #0f0f1a;
+    border: 1px solid #7c3aed55;
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    min-height: 60px;
+    color: #e2e8f0;
+  }
+  .loader { text-align: center; padding: 20px; color: #a78bfa; font-size: 14px; display: none; }
+  .steps-nav { display: flex; gap: 8px; margin-bottom: 24px; }
+  .step-dot {
+    flex: 1; height: 4px; border-radius: 4px;
+    background: #ffffff15;
+    transition: background 0.3s;
+  }
+  .step-dot.done { background: #7c3aed; }
+  .download-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 13px;
+    background: transparent;
+    border: 1px solid #7c3aed;
+    border-radius: 12px;
+    color: #a78bfa;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .download-btn:hover { background: #7c3aed22; }
+  .username-display { color: #a78bfa; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- ЭКРАН ВХОДА -->
+  <div id="loginSection" class="section active">
+    <div class="icon">🔐</div>
+    <h1>Введи своё имя и код доступа</h1>
+    <div class="subtitle">Получи свой персональный ИИ-план заработка.<br>Код доступа — в письме после оплаты.</div>
+
+    <label>КАК ТЕБЯ ЗОВУТ</label>
+    <input type="text" id="userName" placeholder="Например: Анна" />
+
+    <label>КОД ДОСТУПА</label>
+    <input type="password" id="userPass" placeholder="Введи код..." />
+
+    <div class="error" id="loginError">❌ Неверный код доступа. Проверь письмо или напиши куратору.</div>
+
+    <button class="btn" onclick="checkLogin()">🚀 Начать работу с ИИ</button>
+    <div class="hint">🔒 Твои ответы хранятся только в твоём браузере</div>
+  </div>
+
+  <!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
+  <div id="mainSection" class="section">
+    <div class="steps-nav">
+      <div class="step-dot" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
+      <div class="step-dot" id="dot4"></div>
+    </div>
+
+    <h1 style="margin-bottom:6px">Привет, <span class="username-display" id="displayName"></span>! 👋</h1>
+    <div class="subtitle" style="margin-bottom:20px">Твой личный ИИ-наставник готов помочь</div>
+
+    <!-- ШАГ 1 -->
+    <div id="step1" class="section active">
+      <div class="step-header">ШАГ 1 из 4 — Расскажи о себе</div>
+      <h1 style="font-size:18px;margin-bottom:4px">Найдём твои ниши 🎯</h1>
+      <label>ТВОЙ ОПЫТ И НАВЫКИ</label>
+      <textarea id="s1exp" placeholder="Например: работала учителем 10 лет, веду соцсети, умею объяснять сложное просто..."></textarea>
+      <label>СКОЛЬКО ЧАСОВ В ДЕНЬ СВОБОДНО</label>
+      <input type="text" id="s1time" placeholder="Например: 2-3 часа вечером" />
+      <button class="btn" onclick="runStep(1)">🔍 Найти мои ниши с ИИ</button>
+      <div class="loader" id="loader1">⏳ ИИ думает... обычно 10-20 секунд</div>
+      <div class="answer-box" id="ans1" style="display:none"></div>
+      <button class="btn" id="next1" style="display:none;margin-top:12px;background:linear-gradient(135deg,#059669,#10b981)" onclick="goStep(2)">Дальше → Шаг 2</button>
+    </div>
+
+    <!-- ШАГ 2 -->
+    <div id="step2" class="section">
+      <div class="step-header">ШАГ 2 из 4 — Резюме 2.0</div>
+      <h1 style="font-size:18px;margin-bottom:4px">Сформулируем твою экспертность 💼</h1>
+      <label>КАКУЮ НИШУ ВЫБРАЛА (из шага 1)</label>
+      <input type="text" id="s2niche" placeholder="Например: онлайн-репетитор по математике" />
+      <label>ТВОЙ ГЛАВНЫЙ ОПЫТ В ЭТОЙ ТЕМЕ</label>
+      <textarea id="s2exp" placeholder="Что умеешь, чего достигла, сколько лет опыта..."></textarea>
+      <button class="btn" onclick="runStep(2)">✍️ Написать моё Резюме 2.0</button>
+      <div class="loader" id="loader2">⏳ ИИ пишет резюме...</div>
+      <div class="answer-box" id="ans2" style="display:none"></div>
+      <button class="btn" id="next2" style="display:none;margin-top:12px;background:linear-gradient(135deg,#059669,#10b981)" onclick="goStep(3)">Дальше → Шаг 3</button>
+    </div>
+
+    <!-- ШАГ 3 -->
+    <div id="step3" class="section">
+      <div class="step-header">ШАГ 3 из 4 — Первая продажа</div>
+      <h1 style="font-size:18px;margin-bottom:4px">План «0 → первый клиент» 🚀</h1>
+      <label>КАКОЙ РЕЗУЛЬТАТ ДАЁШЬ КЛИЕНТУ</label>
+      <textarea id="s3result" placeholder="Например: помогаю женщинам после 40 похудеть на 10 кг за 3 месяца без голодания..."></textarea>
+      <button class="btn" onclick="runStep(3)">📋 Получить план первой продажи</button>
+      <div class="loader" id="loader3">⏳ ИИ составляет план...</div>
+      <div class="answer-box" id="ans3" style="display:none"></div>
+      <button class="btn" id="next3" style="display:none;margin-top:12px;background:linear-gradient(135deg,#059669,#10b981)" onclick="goStep(4)">Дальше → Шаг 4</button>
+    </div>
+
+    <!-- ШАГ 4 -->
+    <div id="step4" class="section">
+      <div class="step-header">ШАГ 4 из 4 — Контент-план</div>
+      <h1 style="font-size:18px;margin-bottom:4px">14 дней контента 📅</h1>
+      <label>ПЛОЩАДКА</label>
+      <input type="text" id="s4platform" placeholder="Например: ВКонтакте, Telegram, Instagram" />
+      <label>ТВОЙ СТИЛЬ ОБЩЕНИЯ</label>
+      <input type="text" id="s4tone" placeholder="Например: дружелюбный, экспертный, с юмором" />
+      <button class="btn" onclick="runStep(4)">📝 Написать контент-план на 14 дней</button>
+      <div class="loader" id="loader4">⏳ ИИ пишет контент-план...</div>
+      <div class="answer-box" id="ans4" style="display:none"></div>
+      <button class="download-btn" id="dlBtn" style="display:none" onclick="downloadAll()">⬇️ Скачать все мои ответы (.txt)</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const CORRECT_PASSWORD = 'kira2026';
+const PROXY_URL = 'https://aimultonlainurok.netlify.app/.netlify/functions/proxy';
+
+let userName = '';
+let answers = {};
+
+function checkLogin() {
+  const name = document.getElementById('userName').value.trim();
+  const pass = document.getElementById('userPass').value.trim();
+  const err = document.getElementById('loginError');
+
+  if (!name) { err.style.display='block'; err.textContent='❌ Напиши своё имя!'; return; }
+  if (pass !== CORRECT_PASSWORD) { err.style.display='block'; err.textContent='❌ Неверный код доступа. Проверь письмо или напиши куратору.'; return; }
+
+  userName = name;
+  document.getElementById('displayName').textContent = name;
+  document.getElementById('loginSection').classList.remove('active');
+  document.getElementById('mainSection').classList.add('active');
+  document.getElementById('step1').classList.add('active');
+  updateDots(1);
+}
+
+function goStep(n) {
+  for(let i=1;i<=4;i++) {
+    document.getElementById('step'+i).classList.remove('active');
+  }
+  document.getElementById('step'+n).classList.add('active');
+  updateDots(n);
+}
+
+function updateDots(current) {
+  for(let i=1;i<=4;i++) {
+    const dot = document.getElementById('dot'+i);
+    dot.classList.toggle('done', i <= current);
+  }
+}
+
+async function runStep(step) {
+  const loader = document.getElementById('loader'+step);
+  const ansBox = document.getElementById('ans'+step);
+  const nextBtn = document.getElementById('next'+step);
+
+  let prompt = '';
+
+  if(step===1) {
+    const exp = document.getElementById('s1exp').value.trim();
+    const time = document.getElementById('s1time').value.trim();
+    if(!exp) { alert('Расскажи о своём опыте!'); return; }
+    prompt = `Ты — бизнес-наставник для женщин, которые хотят зарабатывать онлайн. Клиентку зовут ${userName}.
+
+Её опыт и навыки: ${exp}
+Свободное время: ${time || 'не указано'}
+
+Предложи ровно 3 конкретные онлайн-ниши, которые подходят именно ей. Для каждой ниши напиши:
+1. Название ниши
+2. Почему подходит именно ей (1-2 предложения)
+3. Сколько можно заработать в первый месяц реально
+
+Пиши просто, по-дружески, без воды.`;
+  }
+
+  if(step===2) {
+    const niche = document.getElementById('s2niche').value.trim();
+    const exp = document.getElementById('s2exp').value.trim();
+    if(!niche||!exp) { alert('Заполни все поля!'); return; }
+    prompt = `Ты — копирайтер-эксперт. Напиши "Резюме 2.0" для ${userName}.
+
+Ниша: ${niche}
+Опыт: ${exp}
+
+Резюме 2.0 — это короткое позиционирование для соцсетей. Напиши:
+1. Одна строка "Кто я" (для шапки профиля)
+2. Абзац "Моя история" (3-4 предложения, живо и по-человечески)
+3. "Я помогаю [кому] получить [что] с помощью [как]"
+
+Стиль: тёплый, честный, без громких слов.`;
+  }
+
+  if(step===3) {
+    const result = document.getElementById('s3result').value.trim();
+    if(!result) { alert('Опиши результат для клиента!'); return; }
+    prompt = `Ты — наставник по первым продажам онлайн. Помоги ${userName}.
+
+Результат для клиента: ${result}
+
+Составь план "0 → первый клиент" на 7 дней. Конкретные действия по дням — что именно написать, куда зайти, кому позвонить. Без теории, только практика. Максимум 7 пунктов.`;
+  }
+
+  if(step===4) {
+    const platform = document.getElementById('s4platform').value.trim();
+    const tone = document.getElementById('s4tone').value.trim();
+    if(!platform) { alert('Укажи площадку!'); return; }
+    const niche = document.getElementById('s2niche').value || 'онлайн-эксперт';
+    prompt = `Ты — SMM-стратег. Составь контент-план на 14 дней для ${userName}.
+
+Ниша: ${niche}
+Площадка: ${platform}
+Стиль: ${tone || 'дружелюбный'}
+
+Для каждого из 14 дней напиши:
+День N: [тип поста] — [конкретная тема/заголовок]
+
+После таблицы добавь 3 совета по оформлению профиля.`;
+  }
+
+  loader.style.display = 'block';
+  ansBox.style.display = 'none';
+  if(nextBtn) nextBtn.style.display = 'none';
+  if(step===4) document.getElementById('dlBtn').style.display='none';
+
+  try {
+    const response = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1200
+      })
+    });
+
+    if(!response.ok) {
+      const err = await response.text();
+      throw new Error('Ошибка сервера: ' + response.status + ' ' + err);
+    }
+
+    const data = await response.json();
+    const text = data.choices[0].message.content;
+    answers['step'+step] = text;
+
+    ansBox.textContent = text;
+    ansBox.style.display = 'block';
+    if(nextBtn) nextBtn.style.display = 'block';
+    if(step===4) document.getElementById('dlBtn').style.display='block';
+
+  } catch(e) {
+    ansBox.textContent = '⚠️ Ошибка: ' + e.message + '\n\nПроверь что в Netlify правильно прописан OPENAI_API_KEY и сделан повторный деплой.';
+    ansBox.style.display = 'block';
+  }
+
+  loader.style.display = 'none';
+}
+
+function downloadAll() {
+  let text = `ИИ-план заработка для ${userName}\n${'='.repeat(40)}\n\n`;
+  if(answers.step1) text += `ШАГ 1 — МОИ НИШИ:\n${answers.step1}\n\n`;
+  if(answers.step2) text += `ШАГ 2 — МОЁ РЕЗЮМЕ 2.0:\n${answers.step2}\n\n`;
+  if(answers.step3) text += `ШАГ 3 — ПЛАН ПЕРВОЙ ПРОДАЖИ:\n${answers.step3}\n\n`;
+  if(answers.step4) text += `ШАГ 4 — КОНТЕНТ-ПЛАН 14 ДНЕЙ:\n${answers.step4}\n\n`;
+  text += `\nСгенерировано: ${new Date().toLocaleDateString('ru-RU')}`;
+
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ИИ-план_${userName}.txt`;
+  a.click();
+}
+
+// Enter для входа
+document.addEventListener('keydown', function(e) {
+  if(e.key==='Enter' && document.getElementById('loginSection').classList.contains('active')) {
+    checkLogin();
+  }
+});
+</script>
+</body>
+</html>
